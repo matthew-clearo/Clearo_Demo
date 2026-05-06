@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLoaderData } from "react-router";
 import SeoHead from "@/components/SeoHead";
 import { buildOrganizationSchema } from "@/utils/jsonLd";
@@ -26,12 +26,15 @@ export async function loader({ request }) {
 export default function HomePage() {
   const loaderData = useLoaderData();
   const seo = loaderData?.seo || getFallbackSeo("/");
-  const clinicSurface = isClinicHost();
+  const { scanTypes = [] } = useSearchData("", "", "", { min: "", max: "" }, "");
+  const [clinicSurface, setClinicSurface] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (clinicSurface) window.location.replace("/clinic-admin/signin");
-  }, [clinicSurface]);
+    if (isClinicHost()) {
+      setClinicSurface(true);
+      window.location.replace("/clinic-admin/signin");
+    }
+  }, []);
 
   if (clinicSurface) {
     return (
@@ -40,8 +43,6 @@ export default function HomePage() {
       </div>
     );
   }
-
-  const { scanTypes = [] } = useSearchData("", "", "", { min: "", max: "" }, "");
 
   return (
     <div className="min-h-screen">
