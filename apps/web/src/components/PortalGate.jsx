@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { isClinicHost } from "@/utils/siteSurface";
+import { isDemo } from "@/utils/env";
 
 /**
  * Gate component for the clinic portal surface.
@@ -37,14 +38,13 @@ export default function PortalGate({ children }) {
   const [authed, setAuthed] = useState(false);
 
   const isClinic = isClinicHost();
-  const isPortal = isClinic;
+  const isPortalPath =
+    pathname.startsWith("/clinic-admin") ||
+    pathname.startsWith("/clinic-onboarding");
+  const isPortal = isClinic || (isDemo && isPortalPath);
 
   // On the public site, block portal-only paths entirely
   if (!isPortal) {
-    const isPortalPath =
-      pathname.startsWith("/clinic-admin") ||
-      pathname.startsWith("/clinic-onboarding");
-
     if (isPortalPath) {
       if (typeof window !== "undefined") {
         window.location.replace("/");

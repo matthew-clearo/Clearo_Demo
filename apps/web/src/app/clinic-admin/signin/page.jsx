@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import CaptchaField from "@/components/CaptchaField";
 import secureFetch from "@/utils/secureFetch";
+import { isDemo } from "@/utils/env";
 import { getClinicLocalHref } from "@/utils/clinicPortal";
 import ClinicAuthShell from "@/components/auth/ClinicAuthShell";
 
@@ -32,6 +33,7 @@ export default function ClinicSignInPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (isDemo) return;
     if (!shouldRenderCaptcha && email.trim() && password) {
       setShouldRenderCaptcha(true);
     }
@@ -43,7 +45,7 @@ export default function ClinicSignInPage() {
     setLoading(true);
     setError(null);
 
-    if (!shouldRenderCaptcha) {
+    if (!isDemo && !shouldRenderCaptcha) {
       setShouldRenderCaptcha(true);
       setError("Please complete the CAPTCHA challenge.");
       setLoading(false);
@@ -52,9 +54,11 @@ export default function ClinicSignInPage() {
 
     let attemptedProtectedRequest = false;
     try {
-      const freshCaptchaToken = await captchaRef.current?.executeCaptcha?.();
+      const freshCaptchaToken = isDemo
+        ? ""
+        : await captchaRef.current?.executeCaptcha?.();
 
-      if (!freshCaptchaToken) {
+      if (!isDemo && !freshCaptchaToken) {
         throw new Error("Could not verify CAPTCHA. Please try again.");
       }
 
@@ -146,7 +150,7 @@ export default function ClinicSignInPage() {
           </a>
         </div>
 
-        {shouldRenderCaptcha ? (
+        {!isDemo && shouldRenderCaptcha ? (
           <CaptchaField
             onChange={setCaptchaToken}
             ref={captchaRef}

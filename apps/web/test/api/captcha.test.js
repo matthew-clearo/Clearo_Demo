@@ -13,11 +13,25 @@ describe("verifyCaptchaToken", () => {
   const originalSecret = process.env.HCAPTCHA_SECRET_KEY;
   const originalSiteKey = process.env.HCAPTCHA_SITE_KEY;
   const originalLoginSiteKey = process.env.HCAPTCHA_SITE_KEY_LOGIN;
+  const originalDemoMode = process.env.DEMO_MODE;
+  const originalAppEnv = process.env.APP_ENV;
+  const originalPublicAppEnv = process.env.NEXT_PUBLIC_APP_ENV;
+
+  const restoreEnv = (key, value) => {
+    if (typeof value === "undefined") {
+      delete process.env[key];
+      return;
+    }
+    process.env[key] = value;
+  };
 
   afterEach(() => {
-    process.env.HCAPTCHA_SECRET_KEY = originalSecret;
-    process.env.HCAPTCHA_SITE_KEY = originalSiteKey;
-    process.env.HCAPTCHA_SITE_KEY_LOGIN = originalLoginSiteKey;
+    restoreEnv("HCAPTCHA_SECRET_KEY", originalSecret);
+    restoreEnv("HCAPTCHA_SITE_KEY", originalSiteKey);
+    restoreEnv("HCAPTCHA_SITE_KEY_LOGIN", originalLoginSiteKey);
+    restoreEnv("DEMO_MODE", originalDemoMode);
+    restoreEnv("APP_ENV", originalAppEnv);
+    restoreEnv("NEXT_PUBLIC_APP_ENV", originalPublicAppEnv);
     vi.restoreAllMocks();
   });
 
@@ -34,6 +48,21 @@ describe("verifyCaptchaToken", () => {
 
     const result = await verifyCaptchaToken(
       new Request("http://localhost/api/auth/signup", { method: "POST" }),
+      "",
+    );
+
+    expect(result).toEqual({ success: true, required: false, reason: null });
+  });
+
+  it("skips verification in demo mode even when a secret is configured", async () => {
+    process.env.DEMO_MODE = "true";
+    process.env.HCAPTCHA_SECRET_KEY = "secret";
+
+    const result = await verifyCaptchaToken(
+      new Request("http://localhost/api/auth/signup", {
+        method: "POST",
+        headers: { origin: "http://localhost:4000" },
+      }),
       "",
     );
 

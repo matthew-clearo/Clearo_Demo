@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import CaptchaField from "@/components/CaptchaField";
 import secureFetch from "@/utils/secureFetch";
 import { sanitizeCallbackUrl } from "@/utils/safeRedirect";
+import { isDemo } from "@/utils/env";
 import useAuth from "@/utils/useAuth";
 import Logo from "@/components/Logo";
 import { X, Eye, EyeOff } from "lucide-react";
@@ -63,6 +64,7 @@ export default function SignInPage() {
   }, []);
 
   useEffect(() => {
+    if (isDemo) return;
     if (!shouldRenderCaptcha && email.trim() && password) {
       setShouldRenderCaptcha(true);
     }
@@ -104,7 +106,7 @@ export default function SignInPage() {
       return;
     }
 
-    if (!shouldRenderCaptcha) {
+    if (!isDemo && !shouldRenderCaptcha) {
       setShouldRenderCaptcha(true);
       setError("Please complete the CAPTCHA challenge.");
       setLoading(false);
@@ -113,9 +115,11 @@ export default function SignInPage() {
 
     let attemptedProtectedRequest = false;
     try {
-      const freshCaptchaToken = await captchaRef.current?.executeCaptcha?.();
+      const freshCaptchaToken = isDemo
+        ? ""
+        : await captchaRef.current?.executeCaptcha?.();
 
-      if (!freshCaptchaToken) {
+      if (!isDemo && !freshCaptchaToken) {
         throw new Error("CaptchaUnavailable");
       }
 
@@ -672,7 +676,7 @@ export default function SignInPage() {
                     </div>
                   </div>
 
-                  {shouldRenderCaptcha ? (
+                  {!isDemo && shouldRenderCaptcha ? (
                     <CaptchaField
                       onChange={setCaptchaToken}
                       ref={captchaRef}
@@ -789,6 +793,28 @@ export default function SignInPage() {
                       Sign up
                     </Link>
                   </p>
+
+                  {isDemo ? (
+                    <div
+                      className="rounded-[1.25rem] p-4 text-sm font-inter"
+                      style={{
+                        background: "rgba(245, 158, 11, 0.08)",
+                        border: "1px solid rgba(245, 158, 11, 0.25)",
+                        color: "#4B5563",
+                      }}
+                    >
+                      <span className="font-semibold" style={{ color: "#1A1A1A" }}>
+                        Clinic demo?
+                      </span>{" "}
+                      <a
+                        href="/clinic-admin/signin"
+                        className="font-semibold hover:underline"
+                        style={{ color: SAGE }}
+                      >
+                        Sign in to the clinic portal
+                      </a>
+                    </div>
+                  ) : null}
                 </form>
               </>
             )}

@@ -1,4 +1,5 @@
 import logger from "@/app/api/utils/logger";
+import { isDemoMode } from "@/app/api/utils/demoMode";
 
 const CAPTCHA_VERIFY_URL = "https://api.hcaptcha.com/siteverify";
 
@@ -37,6 +38,7 @@ function getClientIp(request) {
 }
 
 function shouldRequireCaptcha(request) {
+  if (isDemoMode()) return false;
   if (!process.env.HCAPTCHA_SECRET_KEY) return false;
   if (!request) return true;
 
