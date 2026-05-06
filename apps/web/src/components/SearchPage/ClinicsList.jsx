@@ -206,21 +206,27 @@ export function ClinicsList({
             Prev
           </button>
 
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handlePageChange(i)}
-                className="w-8 h-8 rounded-full text-xs font-semibold font-inter transition-all"
-                style={{
-                  backgroundColor: i === currentPage ? SAGE : "transparent",
-                  color: i === currentPage ? "#fff" : "#6b7280",
-                }}
-              >
-                {i + 1}
-              </button>
-            ))}
+          <div className="flex items-center gap-1">
+            {totalPages <= 5 ? (
+              Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handlePageChange(i)}
+                  className="w-8 h-8 rounded-full text-xs font-semibold font-inter transition-all"
+                  style={{
+                    backgroundColor: i === currentPage ? SAGE : "transparent",
+                    color: i === currentPage ? "#fff" : "#6b7280",
+                  }}
+                >
+                  {i + 1}
+                </button>
+              ))
+            ) : (
+              <span className="text-sm text-gray-500 font-inter tabular-nums">
+                {currentPage + 1} / {totalPages}
+              </span>
+            )}
           </div>
 
           <button

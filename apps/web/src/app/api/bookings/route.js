@@ -98,7 +98,13 @@ export async function POST(request) {
         validateUUID(rawSlotId, "slot ID");
 
         // Get internal IDs from public UUIDs
-        const [clinic] = await sql`SELECT id FROM clinics WHERE public_id = ${rawClinicId} LIMIT 1`;
+        const [clinic] = await sql`
+          SELECT id
+          FROM clinics
+          WHERE public_id = ${rawClinicId}
+            AND approval_status = 'approved'
+          LIMIT 1
+        `;
         const [scanType] = await sql`SELECT id FROM scan_types WHERE public_id = ${rawScanTypeId} LIMIT 1`;
         const [slot] = await sql`SELECT id FROM available_slots WHERE public_id = ${rawSlotId} LIMIT 1`;
 

@@ -37,9 +37,6 @@ export function DesktopLayout({
   availabilityError,
   selectedScanTypeForAvailability,
   onPickSlot,
-  // booking panel
-  bookingOpen,
-  bookingPanel,
   // map state
   mapCenter,
   mapZoom,
@@ -47,8 +44,6 @@ export function DesktopLayout({
   setUserInteractedWithMap,
   recenterMap,
 }) {
-  const isBookingMode = Boolean(bookingOpen);
-
   return (
     <div className="hidden md:block relative z-10 px-4 lg:px-8 py-6 lg:py-8">
       <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -125,36 +120,30 @@ export function DesktopLayout({
                   Search Results
                 </span>
                 <h2 className="mt-2 text-2xl font-heading font-semibold text-gray-900">
-                  {isBookingMode
-                    ? "Complete your booking"
-                    : isLoading
-                      ? "Searching nearby clinics..."
-                      : `${resultsCount} clinic${resultsCount === 1 ? "" : "s"} available`}
+                  {isLoading
+                    ? "Searching nearby clinics..."
+                    : `${resultsCount} clinic${resultsCount === 1 ? "" : "s"} available`}
                 </h2>
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
-                {isBookingMode ? (
-                  bookingPanel
-                ) : (
-                  <ClinicsList
-                    clinics={clinics}
-                    isLoading={isLoading}
-                    isClinicsError={isClinicsError}
-                    hasActiveFilters={hasActiveFilters}
-                    clearFilters={clearFilters}
-                    variant="desktop"
-                    expandedClinicId={expandedClinicId}
-                    setExpandedClinicId={setExpandedClinicId}
-                    selectedDateFilter={selectedDate}
-                    availabilityByClinic={availabilityByClinic}
-                    availabilityLoading={availabilityLoading}
-                    availabilityError={availabilityError}
-                    selectedScanTypeForAvailability={selectedScanTypeForAvailability}
-                    onPickSlot={onPickSlot}
-                    onClinicClick={onClinicClick}
-                  />
-                )}
+                <ClinicsList
+                  clinics={clinics}
+                  isLoading={isLoading}
+                  isClinicsError={isClinicsError}
+                  hasActiveFilters={hasActiveFilters}
+                  clearFilters={clearFilters}
+                  variant="desktop"
+                  expandedClinicId={expandedClinicId}
+                  setExpandedClinicId={setExpandedClinicId}
+                  selectedDateFilter={selectedDate}
+                  availabilityByClinic={availabilityByClinic}
+                  availabilityLoading={availabilityLoading}
+                  availabilityError={availabilityError}
+                  selectedScanTypeForAvailability={selectedScanTypeForAvailability}
+                  onPickSlot={onPickSlot}
+                  onClinicClick={onClinicClick}
+                />
               </div>
             </div>
           </section>

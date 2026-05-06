@@ -130,6 +130,9 @@ describe("POST /api/bookings/[id]/reschedule", () => {
         manageToken: "secret",
       }),
     );
+    expect(String(sqlWithRLSMock.mock.calls[0][2])).toContain(
+      "AND EXISTS (SELECT 1 FROM new_slot)",
+    );
     expect(sqlWithRLSMock).toHaveBeenLastCalledWith(
       7,
       "patient",

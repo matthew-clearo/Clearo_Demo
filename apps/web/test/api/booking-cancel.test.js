@@ -104,9 +104,14 @@ describe("POST /api/bookings/[id]/cancel", () => {
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
     expect(logAuditMock).toHaveBeenCalledOnce();
-    expect(sqlMock.mock.calls[1][0].join("")).toContain("UPDATE available_slots");
-    expect(sqlMock.mock.calls[1][1]).toBe(99);
-    expect(sqlWithRLSMock).toHaveBeenCalledTimes(3);
+    expect(String(sqlWithRLSMock.mock.calls[1][2])).toContain(
+      "UPDATE available_slots",
+    );
+    expect(String(sqlWithRLSMock.mock.calls[1][2])).toContain(
+      "manage_token_expires_at = NOW()",
+    );
+    expect(sqlMock).toHaveBeenCalledTimes(1);
+    expect(sqlWithRLSMock).toHaveBeenCalledTimes(2);
   });
 
   it("returns 403 when no session or valid token authorizes the cancel", async () => {

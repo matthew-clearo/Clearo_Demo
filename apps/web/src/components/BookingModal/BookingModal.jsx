@@ -378,14 +378,6 @@ export function BookingModal({
     </>
   );
 
-  if (layout === "embedded") {
-    return (
-      <div className="flex h-full min-h-0 flex-col rounded-3xl border border-gray-200 bg-white/95 p-6 shadow-lg sm:p-7">
-        {chrome}
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="flex h-full w-full max-w-none flex-col bg-white p-5 sm:max-h-[92vh] sm:max-w-3xl sm:rounded-[28px] sm:p-8">

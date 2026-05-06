@@ -147,6 +147,7 @@ export async function POST(request, { params }) {
             SET is_available = true
             WHERE id = (SELECT old_slot_id FROM b)
               AND (SELECT old_slot_id FROM b) IS NOT NULL
+              AND EXISTS (SELECT 1 FROM new_slot)
             RETURNING id
           ),
           updated AS (

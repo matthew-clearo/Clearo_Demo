@@ -161,6 +161,36 @@ describe("POST /api/bookings", () => {
     expect(body.error).toBe("This account has been disabled.");
   });
 
+  it("only resolves publicly approved clinics when creating a booking", async () => {
+    authMock.mockResolvedValue({ user: { id: 42 } });
+    assertActivePatientAccountMock.mockResolvedValue({ ok: true });
+    sqlWithRLSMock.mockResolvedValueOnce([[{ emailVerified: "2026-01-01T00:00:00.000Z" }]]);
+    sqlMock
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 20 }])
+      .mockResolvedValueOnce([{ id: 77 }]);
+
+    const { POST } = await import("@/app/api/bookings/route");
+    const request = new Request("http://localhost/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clinic_id: "clinic-public-id",
+        scan_type_id: "scan-public-id",
+        slot_id: "slot-public-id",
+      }),
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error).toBe("Clinic, scan type, or slot not found");
+    expect(sqlMock.mock.calls[0][0].join("")).toContain(
+      "approval_status = 'approved'",
+    );
+  });
+
   it("sends the booking confirmation email with the secure manage link after a successful booking", async () => {
     authMock.mockResolvedValue({ user: { id: 42 } });
     assertActivePatientAccountMock.mockResolvedValue({ ok: true });

@@ -102,15 +102,29 @@ export async function POST(request, { params }) {
         return Response.json({ ok: true, booking });
       }
 
-      // Cancel booking + release slot in a transaction
+      // Cancel booking, release its slot, and expire the manage token atomically.
       try {
         const rlsUserId = userId || booking?.user_id || null;
         const [[updated]] = await sqlWithRLS(rlsUserId, "patient", (tx) => [
           tx`
-            UPDATE bookings
-            SET status = 'cancelled', cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ${bookingId}
-            RETURNING *
+            WITH updated AS (
+              UPDATE bookings
+              SET
+                status = 'cancelled',
+                cancelled_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP,
+                manage_token_expires_at = NOW()
+              WHERE id = ${bookingId}
+              RETURNING *
+            ),
+            released AS (
+              UPDATE available_slots
+              SET is_available = true
+              WHERE id = (SELECT slot_id FROM updated)
+                AND (SELECT slot_id FROM updated) IS NOT NULL
+              RETURNING id
+            )
+            SELECT * FROM updated
           `,
         ]);
 
@@ -131,31 +145,6 @@ export async function POST(request, { params }) {
           },
           request,
         });
-
-        if (updated?.slot_id) {
-          try {
-            await sql`
-              UPDATE available_slots
-              SET is_available = true
-              WHERE id = ${updated.slot_id}
-            `;
-          } catch (slotErr) {
-            logger.error({ err: slotErr }, "Failed to release slot on cancel");
-          }
-        }
-
-        // Invalidate token after one-time use (for cancellation)
-        try {
-          await sqlWithRLS(rlsUserId, "patient", (tx) => [
-            tx`
-              UPDATE bookings
-              SET manage_token_expires_at = NOW()
-              WHERE id = ${bookingId}
-            `,
-          ]);
-        } catch (tokenErr) {
-          logger.error({ err: tokenErr }, "Failed to invalidate token");
-        }
 
         return Response.json({ ok: true, booking: updated });
       } catch (updateErr) {

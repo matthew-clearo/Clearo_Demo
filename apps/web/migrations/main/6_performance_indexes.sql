@@ -26,15 +26,13 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_action_created_at
   ON public.audit_logs(action, created_at DESC);
 
 -- ---------------------------------------------------------------------------
--- 3. SESSION CLEANUP — partial indexes on active sessions only
+-- 3. SESSION CLEANUP — expiry indexes for stale-session pruning
 -- ---------------------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_active
-  ON public.auth_sessions(expires)
-  WHERE expires > NOW();
+  ON public.auth_sessions(expires);
 
 CREATE INDEX IF NOT EXISTS idx_clinic_sessions_active
-  ON clinic.sessions(expires_at)
-  WHERE expires_at > NOW();
+  ON clinic.sessions(expires_at);
 
 -- ---------------------------------------------------------------------------
 -- 4. TRIGRAM INDEXES — for ILIKE '%term%' search on admin patient/user pages

@@ -501,9 +501,6 @@ export default function SearchPage() {
   }, []);
 
   const resultsCount = clinics?.length || 0;
-  const embeddedBookingPanel = (
-    <BookingModal {...bookingProps} layout="embedded" />
-  );
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#FBF8F3] pb-16 md:pb-0">
@@ -582,8 +579,6 @@ export default function SearchPage() {
           availabilityError={availabilityError}
           selectedScanTypeForAvailability={selectedScanType}
           onPickSlot={handlePickSlot}
-          bookingOpen={booking.showBookingForm}
-          bookingPanel={embeddedBookingPanel}
           mapCenter={mapCenter}
           mapZoom={mapZoom}
           userInteractedWithMap={userInteractedWithMap}
@@ -598,7 +593,7 @@ export default function SearchPage() {
         continueUrl={continueUrl}
       />
 
-      {isMobile ? <BookingModal {...bookingProps} layout="modal" /> : null}
+      <BookingModal {...bookingProps} layout="modal" />
 
       {/* Lightweight "opening booking" overlay */}
       {openingBooking ? (
