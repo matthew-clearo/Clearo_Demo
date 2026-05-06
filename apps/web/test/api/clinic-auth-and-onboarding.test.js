@@ -19,6 +19,17 @@ const captchaFailureResponseMock = vi.fn((reason) =>
   Response.json({ error: `captcha:${reason}` }, { status: 400 }),
 );
 const logAuditMock = vi.fn();
+const originalDemoMode = process.env.DEMO_MODE;
+const originalAppEnv = process.env.APP_ENV;
+const originalPublicAppEnv = process.env.NEXT_PUBLIC_APP_ENV;
+
+function restoreEnv(key, value) {
+  if (typeof value === "undefined") {
+    delete process.env[key];
+    return;
+  }
+  process.env[key] = value;
+}
 
 vi.mock("@/app/api/utils/ddosProtection", () => ({
   withFullProtectionAndCsrf: withFullProtectionAndCsrfMock,
@@ -71,6 +82,9 @@ describe("clinic auth and onboarding routes", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    restoreEnv("DEMO_MODE", originalDemoMode);
+    restoreEnv("APP_ENV", originalAppEnv);
+    restoreEnv("NEXT_PUBLIC_APP_ENV", originalPublicAppEnv);
   });
 
   it("rejects weak clinic signup passwords", async () => {
@@ -174,6 +188,51 @@ describe("clinic auth and onboarding routes", () => {
       expect.objectContaining({
         action: "CLINIC_LOGIN_SUCCESS",
         userId: 5,
+      }),
+    );
+  });
+
+  it("bypasses clinic MFA on signin in demo mode", async () => {
+    process.env.DEMO_MODE = "true";
+    sqlMock.mockResolvedValueOnce([
+      {
+        id: 5,
+        email: "clinic@example.com",
+        name: "Clinic User",
+        password_hash: await (await import("bcryptjs")).default.hash("StrongPass1", 12),
+        email_verified_at: new Date().toISOString(),
+        status: "active",
+      },
+    ]);
+    createClinicSessionMock.mockResolvedValue({ token: "clinic-session-token" });
+    createClinicSessionCookieMock.mockReturnValue("clinic_session=cookie");
+
+    const { POST } = await import("@/app/api/clinic/auth/signin/route");
+    const request = new Request("http://localhost/api/clinic/auth/signin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "clinic@example.com",
+        password: "StrongPass1",
+      }),
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.mfa_required).toBe(false);
+    expect(body.mfa_enrolled).toBe(false);
+    expect(clinicUserRequiresMfaMock).not.toHaveBeenCalled();
+    expect(isClinicMfaEnabledMock).not.toHaveBeenCalled();
+    expect(logAuditMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "CLINIC_LOGIN_SUCCESS",
+        details: expect.objectContaining({
+          demo_mode: true,
+          mfa_required: false,
+        }),
       }),
     );
   });

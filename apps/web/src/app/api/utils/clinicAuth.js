@@ -6,6 +6,7 @@ import {
   isClinicMfaEnabled,
   isClinicMfaSessionValid,
 } from "./clinicMfa";
+import { isDemoMode } from "./demoMode";
 
 const CLINIC_SESSION_COOKIE = "clinic_session";
 const CLINIC_SESSION_MAX_AGE = 8 * 60 * 60;
@@ -199,7 +200,10 @@ export async function requireClinicAccess(request, options = {}) {
   }
 
   const memberships = await getClinicMemberships(clinicUser.id);
-  const mfaRequired = memberships.some((membership) => clinicRoleRequiresMfa(membership.role));
+  const demoMode = isDemoMode();
+  const mfaRequired = demoMode
+    ? false
+    : memberships.some((membership) => clinicRoleRequiresMfa(membership.role));
   const pathname = getRequestPathname(request);
   const bypassMfaGate = isClinicMfaBypassPath(pathname);
   const mfaEnrolled = mfaRequired ? await isClinicMfaEnabled(clinicUser.id) : false;

@@ -6,6 +6,7 @@ import { createClinicSession, createClinicSessionCookie } from "@/app/api/utils/
 import { clinicUserRequiresMfa, isClinicMfaEnabled } from "@/app/api/utils/clinicMfa";
 import { logAudit, AUDIT_ACTIONS } from "@/app/api/utils/auditLog";
 import { captchaFailureResponse, verifyCaptchaToken } from "@/app/api/utils/captcha";
+import { isDemoMode } from "@/app/api/utils/demoMode";
 
 export async function POST(request) {
   return withFullProtectionAndCsrf(request, "clinic-auth-login", async () => {
@@ -81,14 +82,15 @@ export async function POST(request) {
       }
 
       const session = await createClinicSession(clinicUser.id, request);
-      const mfaRequired = await clinicUserRequiresMfa(clinicUser.id);
+      const demoMode = isDemoMode();
+      const mfaRequired = demoMode ? false : await clinicUserRequiresMfa(clinicUser.id);
       const mfaEnabled = mfaRequired && (await isClinicMfaEnabled(clinicUser.id));
       await logAudit({
         userId: clinicUser.id,
         action: AUDIT_ACTIONS.CLINIC_LOGIN_SUCCESS,
         entityType: "clinic_user",
         entityId: clinicUser.id,
-        details: { email, mfa_required: mfaRequired, mfa_enrolled: mfaEnabled },
+        details: { email, mfa_required: mfaRequired, mfa_enrolled: mfaEnabled, demo_mode: demoMode },
         request,
       });
       return Response.json(
