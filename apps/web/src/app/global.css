@@ -1,0 +1,76 @@
+/* Tobias — Variable Font (uprights) */
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-VF-Uprights.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tobias — Variable Font (italics) */
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-VF-Italics.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Static fallbacks for browsers that don't support variable fonts */
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-RegularItalic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tobias';
+  src: url('/fonts/Tobias-BoldItalic.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  input, textarea, select, button {
+    @apply outline-none focus:outline-none;
+  }
+}

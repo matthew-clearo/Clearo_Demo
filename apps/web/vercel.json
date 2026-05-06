@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.clearo.com.au"
+        }
+      ],
+      "destination": "https://clearo.com.au/$1",
+      "permanent": true
+    }
+  ]
+}
