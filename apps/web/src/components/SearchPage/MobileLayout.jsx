@@ -6,6 +6,7 @@ import { SearchCard } from "@/components/HomePage/SearchCard";
 export function MobileLayout({
   searchTerm,
   handleLocationChange,
+  handleLocationFocus,
   locationSuggestions,
   showSuggestions,
   setShowSuggestions,
@@ -57,6 +58,7 @@ export function MobileLayout({
           scanTypes={scanTypes}
           searchTerm={searchTerm}
           handleLocationChange={handleLocationChange}
+          handleLocationFocus={handleLocationFocus}
           locationSuggestions={locationSuggestions}
           showSuggestions={showSuggestions}
           setShowSuggestions={setShowSuggestions}

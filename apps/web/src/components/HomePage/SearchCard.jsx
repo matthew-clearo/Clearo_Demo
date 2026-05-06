@@ -27,6 +27,7 @@ export function SearchCard({
   scanTypes,
   searchTerm,
   handleLocationChange,
+  handleLocationFocus,
   locationSuggestions,
   showSuggestions,
   setShowSuggestions,
@@ -40,6 +41,7 @@ export function SearchCard({
   clearFilters,
 }) {
   const SAGE = "#3D6B5E";
+  const locationRef = useRef(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(selectedDate || "");
   const [visibleMonth, setVisibleMonth] = useState(() => {
@@ -101,16 +103,19 @@ export function SearchCard({
       if (!datePickerRef.current?.contains(event.target)) {
         setIsDatePickerOpen(false);
       }
+      if (!locationRef.current?.contains(event.target)) {
+        setShowSuggestions(false);
+      }
     }
 
-    if (isDatePickerOpen) {
+    if (isDatePickerOpen || showSuggestions) {
       document.addEventListener("mousedown", handlePointerDown);
     }
 
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
     };
-  }, [isDatePickerOpen]);
+  }, [isDatePickerOpen, showSuggestions, setShowSuggestions]);
 
   useEffect(() => {
     if (!isDatePickerOpen) {
@@ -231,7 +236,7 @@ export function SearchCard({
             </select>
           </div>
 
-          <div className="relative rounded-lg sm:rounded-[12px] border border-black/[0.06] bg-white px-3 py-2.5 sm:px-4 sm:py-3.5 transition-all hover:border-black/[0.10] hover:shadow-sm">
+          <div ref={locationRef} className="relative rounded-lg sm:rounded-[12px] border border-black/[0.06] bg-white px-3 py-2.5 sm:px-4 sm:py-3.5 transition-all hover:border-black/[0.10] hover:shadow-sm">
             <div className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500 font-inter">
               Location
             </div>
@@ -239,38 +244,56 @@ export function SearchCard({
               <MapPin className="text-gray-400" size={14} />
               <input
                 type="text"
-                placeholder="City, state"
+                placeholder="City, suburb or state"
                 value={searchTerm}
                 onChange={(e) => handleLocationChange(e.target.value)}
-                onFocus={() => handleLocationChange(searchTerm)}
+                onFocus={handleLocationFocus || (() => handleLocationChange(searchTerm))}
                 className="w-full bg-transparent text-gray-900 font-semibold font-inter placeholder:text-gray-400 focus:outline-none text-[13px] sm:text-base"
+                autoComplete="off"
               />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleLocationChange("");
+                    setShowSuggestions(false);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
 
             {showSuggestions && locationSuggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-[12px] shadow-lg border border-gray-200 max-h-64 overflow-y-auto z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 font-inter">
+                    {searchTerm ? "Suggestions" : "Popular locations"}
+                  </span>
+                </div>
                 {locationSuggestions.map((loc, index) => (
                   <button
-                    key={index}
+                    key={`${loc.name}-${loc.state}-${index}`}
                     onClick={() => selectLocation(loc)}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center"
+                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0"
                         style={{
                           background:
                             "linear-gradient(135deg, rgba(61,107,94,0.10) 0%, rgba(61,107,94,0.06) 100%)",
                         }}
                       >
-                        <MapPin size={16} className="text-gray-600" />
+                        <MapPin size={14} className="text-gray-600" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900 font-inter">
                           {loc.name}
                         </div>
                         <div className="text-xs text-gray-500 font-inter">
-                          {loc.state}
+                          {loc.display || loc.state}
                         </div>
                       </div>
                     </div>

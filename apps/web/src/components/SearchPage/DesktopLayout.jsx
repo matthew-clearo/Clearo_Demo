@@ -6,6 +6,7 @@ import { SearchCard } from "@/components/HomePage/SearchCard";
 export function DesktopLayout({
   searchTerm,
   handleLocationChange,
+  handleLocationFocus,
   locationSuggestions,
   showSuggestions,
   setShowSuggestions,
@@ -58,6 +59,7 @@ export function DesktopLayout({
             scanTypes={scanTypes}
             searchTerm={searchTerm}
             handleLocationChange={handleLocationChange}
+            handleLocationFocus={handleLocationFocus}
             locationSuggestions={locationSuggestions}
             showSuggestions={showSuggestions}
             setShowSuggestions={setShowSuggestions}
@@ -75,7 +77,7 @@ export function DesktopLayout({
         </div>
 
         <div
-          className="relative z-0 grid min-h-[calc(100vh-220px)] gap-6"
+          className="relative z-0 grid h-[calc(100vh-220px)] gap-6"
           style={{
             gridTemplateColumns:
               viewMode === "map"

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { ClinicCard } from "./ClinicCard";
 
 export function ClinicsList({
@@ -23,6 +23,8 @@ export function ClinicsList({
 }) {
   const isDesktop = variant === "desktop";
   const SAGE = "#3D6B5E";
+  const CLINICS_PER_PAGE = 5;
+  const [currentPage, setCurrentPage] = useState(0);
 
   const gridClass = isDesktop
     ? "grid grid-cols-1 gap-6"
@@ -50,6 +52,18 @@ export function ClinicsList({
     setExpandedClinicId(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clinicsKey]);
+
+  // Reset pagination when clinics change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [clinicsKey]);
+
+  const totalPages = isDesktop ? 1 : Math.ceil(clinics.length / CLINICS_PER_PAGE);
+  const displayedClinics = isDesktop
+    ? clinics
+    : clinics.slice(currentPage * CLINICS_PER_PAGE, (currentPage + 1) * CLINICS_PER_PAGE);
+
+  const listTopRef = useRef(null);
 
   if (isClinicsError) {
     return (
@@ -125,46 +139,105 @@ export function ClinicsList({
     );
   }
 
-  return (
-    <div className={gridClass}>
-      {clinics.map((clinic) => {
-        const availabilityForClinic = availabilityByClinic?.[clinic.id] || {};
-        const isExpanded =
-          expandedClinicId && String(expandedClinicId) === String(clinic.id);
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setExpandedClinicId?.(null);
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+  };
 
-        return (
-          <div
-            key={clinic.id}
-            className="min-w-0 w-full"
-            ref={(node) => {
-              if (node) {
-                clinicRefs.current[String(clinic.id)] = node;
-              }
+  return (
+    <>
+      <div ref={listTopRef} className={gridClass}>
+        {displayedClinics.map((clinic) => {
+          const availabilityForClinic = availabilityByClinic?.[clinic.id] || {};
+          const isExpanded =
+            expandedClinicId && String(expandedClinicId) === String(clinic.id);
+
+          return (
+            <div
+              key={clinic.id}
+              className="min-w-0 w-full"
+              ref={(node) => {
+                if (node) {
+                  clinicRefs.current[String(clinic.id)] = node;
+                }
+              }}
+            >
+              <ClinicCard
+                clinic={clinic}
+                variant={variant}
+                expanded={Boolean(isExpanded)}
+                onToggleExpanded={(id) => {
+                  if (!setExpandedClinicId) return;
+                  const next =
+                    expandedClinicId && String(expandedClinicId) === String(id)
+                      ? null
+                      : id;
+                  setExpandedClinicId(next);
+                }}
+                availability={availabilityForClinic}
+                availabilityLoading={availabilityLoading}
+                availabilityError={availabilityError}
+                selectedScanTypeForAvailability={selectedScanTypeForAvailability}
+                selectedDateFilter={selectedDateFilter}
+                onPickSlot={onPickSlot}
+                onClick={onClinicClick ? () => onClinicClick(clinic) : undefined}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {!isDesktop && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-5 rounded-[12px] border border-gray-200 bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <button
+            type="button"
+            onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
+            disabled={currentPage === 0}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium font-inter transition-all disabled:opacity-35 disabled:cursor-not-allowed"
+            style={{
+              color: currentPage === 0 ? "#9ca3af" : SAGE,
+              backgroundColor: currentPage === 0 ? "transparent" : "rgba(61,107,94,0.08)",
             }}
           >
-            <ClinicCard
-              clinic={clinic}
-              variant={variant}
-              expanded={Boolean(isExpanded)}
-              onToggleExpanded={(id) => {
-                if (!setExpandedClinicId) return;
-                const next =
-                  expandedClinicId && String(expandedClinicId) === String(id)
-                    ? null
-                    : id;
-                setExpandedClinicId(next);
-              }}
-              availability={availabilityForClinic}
-              availabilityLoading={availabilityLoading}
-              availabilityError={availabilityError}
-              selectedScanTypeForAvailability={selectedScanTypeForAvailability}
-              selectedDateFilter={selectedDateFilter}
-              onPickSlot={onPickSlot}
-              onClick={onClinicClick ? () => onClinicClick(clinic) : undefined}
-            />
+            <ChevronLeft size={16} />
+            Prev
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handlePageChange(i)}
+                className="w-8 h-8 rounded-full text-xs font-semibold font-inter transition-all"
+                style={{
+                  backgroundColor: i === currentPage ? SAGE : "transparent",
+                  color: i === currentPage ? "#fff" : "#6b7280",
+                }}
+              >
+                {i + 1}
+              </button>
+            ))}
           </div>
-        );
-      })}
-    </div>
+
+          <button
+            type="button"
+            onClick={() => handlePageChange(Math.min(totalPages - 1, currentPage + 1))}
+            disabled={currentPage >= totalPages - 1}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium font-inter transition-all disabled:opacity-35 disabled:cursor-not-allowed"
+            style={{
+              color: currentPage >= totalPages - 1 ? "#9ca3af" : SAGE,
+              backgroundColor: currentPage >= totalPages - 1 ? "transparent" : "rgba(61,107,94,0.08)",
+            }}
+          >
+            Next
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
+    </>
   );
 }

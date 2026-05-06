@@ -77,6 +77,7 @@ export default function SearchPage() {
     selectedScanType,
     setSelectedScanType,
     selectedCity,
+    setSelectedCity,
     priceRange,
     setPriceRange,
     selectedDate,
@@ -426,35 +427,78 @@ export default function SearchPage() {
 
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const locationDebounceRef = useRef(null);
+  const locationAbortRef = useRef(null);
 
-  const handleLocationChange = async (value) => {
-    setSearchTerm(value);
-    setSelectedCity("");
+  const fetchLocationSuggestions = useCallback(async (value) => {
+    // Cancel any in-flight request
+    if (locationAbortRef.current) {
+      locationAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    locationAbortRef.current = controller;
+
     try {
       const response = await fetch(
         `/api/locations?search=${encodeURIComponent(value)}`,
+        { signal: controller.signal },
       );
       if (response.ok) {
         const data = await response.json();
         setLocationSuggestions(data);
         setShowSuggestions(true);
-      } else {
-        setShowSuggestions(false);
       }
     } catch (error) {
-      console.error("Error fetching locations:", error);
-      setShowSuggestions(false);
+      if (error.name !== "AbortError") {
+        console.error("Error fetching locations:", error);
+      }
     }
-  };
+  }, []);
 
-  const selectLocation = (loc) => {
-    setSearchTerm(loc.name);
-    setSelectedCity(loc.name);
-    setShowSuggestions(false);
-    if (loc) {
-      setUserInteractedWithMap(false);
+  const handleLocationChange = useCallback(
+    (value) => {
+      setSearchTerm(value);
+      setSelectedCity("");
+
+      // Debounce the API call (250ms)
+      if (locationDebounceRef.current) {
+        clearTimeout(locationDebounceRef.current);
+      }
+      locationDebounceRef.current = setTimeout(() => {
+        fetchLocationSuggestions(value);
+      }, 250);
+    },
+    [fetchLocationSuggestions, setSearchTerm, setSelectedCity],
+  );
+
+  // Show suggestions immediately on focus (no debounce)
+  const handleLocationFocus = useCallback(() => {
+    if (locationSuggestions.length > 0) {
+      setShowSuggestions(true);
+    } else {
+      fetchLocationSuggestions(searchTerm);
     }
-  };
+  }, [locationSuggestions, searchTerm, fetchLocationSuggestions]);
+
+  const selectLocation = useCallback(
+    (loc) => {
+      setSearchTerm(loc.name);
+      setSelectedCity(loc.name);
+      setShowSuggestions(false);
+      if (loc) {
+        setUserInteractedWithMap(false);
+      }
+    },
+    [],
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
+      if (locationAbortRef.current) locationAbortRef.current.abort();
+    };
+  }, []);
 
   const resultsCount = clinics?.length || 0;
   const embeddedBookingPanel = (
@@ -468,6 +512,7 @@ export default function SearchPage() {
         <MobileLayout
           searchTerm={searchTerm}
           handleLocationChange={handleLocationChange}
+          handleLocationFocus={handleLocationFocus}
           locationSuggestions={locationSuggestions}
           showSuggestions={showSuggestions}
           setShowSuggestions={setShowSuggestions}
@@ -507,6 +552,7 @@ export default function SearchPage() {
         <DesktopLayout
           searchTerm={searchTerm}
           handleLocationChange={handleLocationChange}
+          handleLocationFocus={handleLocationFocus}
           locationSuggestions={locationSuggestions}
           showSuggestions={showSuggestions}
           setShowSuggestions={setShowSuggestions}
