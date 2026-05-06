@@ -87,7 +87,7 @@ function getRequestProto(c: { req: { header: (name: string) => string | undefine
 }
 
 export function createApiApp() {
-  const app = new Hono();
+  const app = new Hono<{ Variables: { requestId: string } }>();
   const defaultApiBodyLimit = bodyLimit({
     maxSize: DEFAULT_API_BODY_LIMIT_BYTES,
     onError: (c) => c.json({ error: 'Body size limit exceeded' }, 413),
@@ -99,7 +99,7 @@ export function createApiApp() {
 
   app.use('*', requestId());
   app.use('*', (c, next) => {
-    const id = c.get('requestId');
+    const id = String(c.get('requestId') || '');
     return als.run({ requestId: id }, () => next());
   });
   app.use(contextStorage());
