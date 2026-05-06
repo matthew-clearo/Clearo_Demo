@@ -50,6 +50,21 @@ export async function GET(request) {
             b.appointment_time,
             b.status,
             b.total_price,
+            b.patient_name,
+            b.patient_email,
+            b.patient_phone,
+            b.patient_dob,
+            b.symptoms_reason,
+            b.notes,
+            b.safety_answers,
+            b.patient_name_token,
+            b.patient_email_token,
+            b.patient_phone_token,
+            b.patient_dob_token,
+            b.symptoms_reason_token,
+            b.notes_token,
+            b.safety_answers_token,
+            b.referral_url_token,
             b.referral_status,
             b.referral_file_id,
             b.safety_review_status,
@@ -58,7 +73,7 @@ export async function GET(request) {
             b.created_at,
             b.updated_at,
             c.name as clinic_name,
-            st.name as scan_name
+            st.name as scan_type_name
           FROM bookings b
           JOIN clinics c ON b.clinic_id = c.id
           JOIN scan_types st ON b.scan_type_id = st.id

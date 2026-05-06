@@ -22,27 +22,42 @@ export async function GET(request) {
       );
       if (membershipResult instanceof Response) return membershipResult;
 
-      const whereSql = actionFilter
-        ? sql`WHERE cal.clinic_id = ${membershipResult.clinic.id} AND cal.action = ${actionFilter}`
-        : sql`WHERE cal.clinic_id = ${membershipResult.clinic.id}`;
-
-      const logs = await sql`
-        SELECT
-          cal.id,
-          cal.action,
-          cal.entity_type,
-          cal.entity_id,
-          cal.details,
-          cal.created_at,
-          cu.public_id AS actor_public_id,
-          cu.email AS actor_email,
-          cu.name AS actor_name
-        FROM clinic.audit_logs cal
-        LEFT JOIN clinic.users cu ON cu.id = cal.actor_clinic_user_id
-        ${whereSql}
-        ORDER BY cal.created_at DESC
-        LIMIT ${limit}
-      `;
+      const logs = actionFilter
+        ? await sql`
+            SELECT
+              cal.id,
+              cal.action,
+              cal.entity_type,
+              cal.entity_id,
+              cal.details,
+              cal.created_at,
+              cu.public_id AS actor_public_id,
+              cu.email AS actor_email,
+              cu.name AS actor_name
+            FROM clinic.audit_logs cal
+            LEFT JOIN clinic.users cu ON cu.id = cal.actor_clinic_user_id
+            WHERE cal.clinic_id = ${membershipResult.clinic.id}
+              AND cal.action = ${actionFilter}
+            ORDER BY cal.created_at DESC
+            LIMIT ${limit}
+          `
+        : await sql`
+            SELECT
+              cal.id,
+              cal.action,
+              cal.entity_type,
+              cal.entity_id,
+              cal.details,
+              cal.created_at,
+              cu.public_id AS actor_public_id,
+              cu.email AS actor_email,
+              cu.name AS actor_name
+            FROM clinic.audit_logs cal
+            LEFT JOIN clinic.users cu ON cu.id = cal.actor_clinic_user_id
+            WHERE cal.clinic_id = ${membershipResult.clinic.id}
+            ORDER BY cal.created_at DESC
+            LIMIT ${limit}
+          `;
 
       const actionSummary = await sql`
         SELECT
