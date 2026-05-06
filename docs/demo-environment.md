@@ -12,7 +12,7 @@ NEXT_PUBLIC_APP_ENV=demo
 DEMO_MODE=true
 ```
 
-`NEXT_PUBLIC_APP_ENV=demo` reuses the existing orange environment popup and labels the app as `DEMO`.
+`NEXT_PUBLIC_APP_ENV=demo` reuses the environment popup and labels the app as `DEMO`.
 
 ## What Stays Real
 
